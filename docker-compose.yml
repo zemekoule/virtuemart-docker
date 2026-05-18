@@ -1,0 +1,92 @@
+services:
+
+  joomla:
+    container_name: joomla
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JOOMLA_TAG: ${JOOMLA_TAG:-5}
+        PHP_VERSION: ${PHP_VERSION:-8.3}
+        ARG_UID: ${ENV_UID:-1000}
+        ARG_GID: ${ENV_GID:-1000}
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:80"
+
+    environment:
+      JOOMLA_DB_HOST: dev_db
+      JOOMLA_DB_USER: root
+      JOOMLA_DB_PASSWORD: asdf
+      JOOMLA_DB_NAME: joomla
+      JOOMLA_SITE_NAME: ${JOOMLA_SITE_NAME:-VirtueMart Dev}
+      JOOMLA_ADMIN_USER: ${JOOMLA_ADMIN_USER:-Admin}
+      JOOMLA_ADMIN_USERNAME: ${JOOMLA_ADMIN_USERNAME:-admin}
+      JOOMLA_ADMIN_PASSWORD: ${JOOMLA_ADMIN_PASSWORD:-adminadmin12}
+      JOOMLA_ADMIN_EMAIL: ${JOOMLA_ADMIN_EMAIL:-admin@example.com}
+
+      # PhpStorm CLI debug
+      PHP_IDE_CONFIG: "serverName=virtuemart.local"
+
+    volumes:
+      - ./src:/var/www/html
+      - ./xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - ./php.ini:/usr/local/etc/php/conf.d/zz-custom.ini
+
+      # Modul Packeta pro buildění zipu / composer / lint (analogie packetery-dev z ps8-docker)
+      - type: bind
+        source: ./modules/packeta
+        target: /var/www/packeta-dev
+
+      # Live bind pro plugin po prvním instalu — ODKOMENTOVAT po `install-module.sh`
+      # - type: bind
+      #   source: ./modules/packeta
+      #   target: /var/www/html/plugins/vmshipment/zasilkovna
+
+    networks:
+      - vm_network
+
+  mysql:
+    container_name: dev_db
+    image: mariadb:12
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: joomla
+      MARIADB_ROOT_PASSWORD: asdf
+      TZ: Europe/Prague
+    volumes:
+      - ./db:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - vm_network
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - vm_network
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
+    volumes:
+      - ./mailpit:/data
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - vm_network
+
+networks:
+  vm_network:
