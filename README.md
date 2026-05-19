@@ -100,6 +100,14 @@ Co teď běží:
 
 ### 5. Nainstalovat VirtueMart
 
+> **Proč ručně, a ne skriptem jako modul (krok 10)?** VM má vlastní AIO
+> instalátor s post-install UI workflow (welcome screen + šedý odkaz
+> *Install Sample Data*), který by se přes Joomla CLI dal automatizovat,
+> ale na první instalaci jednou za `reset-env.sh` se to nevyplatí —
+> dál už si stav držíme přes [`db-snapshot.sh`](#scriptsdb-snapshotsh-name).
+> Modul Packeta naopak instalujeme/reinstalujeme často během vývoje,
+> proto má vlastní [`install-module.sh`](#scriptsinstall-modulesh).
+
 V adminu klikni: **Sidebar System → System Dashboard → sekce Install → Extensions → tab Upload Package File**.
 Do dropzóny přetáhni `install/com_virtuemart.4.6.4.11226_package_or_extract.zip`.
 
