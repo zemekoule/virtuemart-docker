@@ -181,8 +181,8 @@ Dev prostředí je připravené. Můžeš:
 
 ## Změna verzí
 
-Default stack (Joomla 5 + PHP 8.3 + VM 4.6.4) odpovídá tomu, co repo
-[testuje](#verze). Pokud chceš odlišnou kombinaci:
+Default stack (Joomla 5 + PHP 8.3 + VM 4.6.4) odpovídá tomu, na čem bylo
+repo [otestované](#verze). Pokud chceš odlišnou kombinaci:
 
 - **Joomla / PHP** — uprav `JOOMLA_TAG` a `PHP_VERSION` v `.env`. Dostupné
   kombinace tagů: viz [`joomla` na Docker Hubu](https://hub.docker.com/_/joomla/tags)
