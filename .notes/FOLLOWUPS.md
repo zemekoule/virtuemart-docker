@@ -60,50 +60,7 @@ Není opraveno, jen poznamenané. Plánovat samostatný PR proti modulu.
 
 ---
 
-## 2. Nastavit PR workflow / branch protection na GitHubu
-
-Pravidlo z globálního `~/.claude/CLAUDE.md`: nikdy nepushovat přímo do `main`,
-vždy přes feature větev, před mergem si vyžádat approve. V praxi to znamená
-nastavit i GitHub stranu, jinak je pravidlo jen "honor system".
-
-### Co teď nefunguje
-
-Při prvním reálném použití (PR #1 `e2e-acceptance-test`) jsem ho jako solo
-autor / co-author na všech commitech **nemohl approvat** — GitHub blokuje
-schválení vlastních PR, pokud branch protection vyžaduje "Require approvals
-from other people". User udělal merge přes UI ručně. Funkční, ale obchází
-původní zamýšlený proces.
-
-### Co rozhodnout
-
-- **Branch protection na `main`** — zapnout? Pokud ano, který režim:
-  - "Require a PR before merging" + "Require approvals: 1" — krásné v týmu,
-    ale v solo režimu blokuje vlastní práci (situace, kterou jsme právě měli).
-  - "Require a PR before merging" + 0 approvals — vynucuje PR, ale autor si
-    smí mergnout vlastní PR. Vyhovuje solo workflow.
-  - "Require status checks to pass" — relevantní až až nastavíme CI.
-- **Bypass list** — povolit ownerovi mergnout vlastní PR bez approve.
-  V Public repu na GH free tier omezené, ve free private repu plné.
-- **Auto-delete branch po mergi** — viz samostatný úkol #3 níže.
-
-### Lokální strana
-
-Globální `~/.claude/CLAUDE.md` pravidlo je zatím psané dost striktně
-("před mergem si vyžádej povolení"). Pro solo projekt s 1-author PR by možná
-stačilo přesnější znění: "before merging to main/master ask the user for
-permission unless this conversation has already established that branch
-protection isn't going to block self-merge". Ale to je zbytečný over-engineering
-pravidla, prostě se ptáme.
-
-### Status
-
-Pending decision: jaký režim branch protection chceme. Až bude rozhodnuto,
-nastavit přes `gh api repos/zemekoule/virtuemart-docker/branches/main/protection`
-nebo přes UI.
-
----
-
-## 3. ~~Zapnout automatické mazání feature větví po mergi (GitHub)~~ ✅ HOTOVO
+## 2. ~~Zapnout automatické mazání feature větví po mergi (GitHub)~~ ✅ HOTOVO
 
 **Vyřešeno 2026-05-19** — *Settings → General → Pull Requests → "Automatically
 delete head branches"* zapnuto user-em. Origin větve se po mergi mažou samy,
@@ -112,7 +69,7 @@ jako project memory (`project_github_auto_delete_branches.md`).
 
 ---
 
-## 4. Hardcoded DB credentials ve scriptech + diskuse o přímém DB zápisu
+## 3. Hardcoded DB credentials ve scriptech + diskuse o přímém DB zápisu
 
 Konfigurace skriptů, které sahají do DB, je dnes ve dvou ohledech fragile.
 
@@ -182,7 +139,7 @@ prostředí, aby refactor scripts byl izolovaný od dalších feature změn.
 
 ---
 
-## 5. Refactor `install.zasilkovna.php` — vyhodit `recurse_copy`
+## 4. Refactor `install.zasilkovna.php` — vyhodit `recurse_copy`
 
 Při auditu souboru (2026-05-19, větev `live-bind-admin-files`) zjištěno, že
 `postflight()` a `update()` oba volají legacy `recurse_copy` funkci

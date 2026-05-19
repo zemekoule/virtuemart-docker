@@ -177,7 +177,7 @@ virtuemart-docker/
 
 ### Návazné úklidy po vyřešení modulových issues
 
-- [ ] **Po vyřešení FOLLOWUPS #5 (refactor `recurse_copy` v modulu) —
+- [ ] **Po vyřešení FOLLOWUPS #4 (refactor `recurse_copy` v modulu) —
       odstranit live-bind workaround z `docker-compose.yml`.** Až modul
       přepíše instalátor na moderní Joomla manifest deklarace
       (`<files>` / `<media>` / `<languages>` v `zasilkovna.xml`), soubory
@@ -190,7 +190,7 @@ virtuemart-docker/
          "live je vše v `modules/packeta/`" bez výjimek pro admin paths.
       3. Aktualizovat poznámky u `### scripts/install-module.sh` a
          `### scripts/reinstall-module.sh` — stejně zjednodušit.
-      4. Smazat odkaz na tento bod v `FOLLOWUPS.md #5`.
+      4. Smazat odkaz na tento bod v `FOLLOWUPS.md #4`.
 
       Spouštěč: nová verze modulu (push do `master` branch
       `Zasilkovna/virtuemart3`) bez `recurse_copy` v `install.zasilkovna.php`.

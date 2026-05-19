@@ -101,7 +101,7 @@ Co teď běží:
 > **DB credentials `root` / `asdf` zatím neměň.** Hodnoty jsou hardcoded
 > v `docker-compose.yml` i v několika skriptech (`db-snapshot.sh`,
 > `db-restore.sh`, `reinstall-module.sh`, `configure-vm-after-install.sh`).
-> Refactor "credentials z `.env`" je v `.notes/FOLLOWUPS.md` #4 —
+> Refactor "credentials z `.env`" je v `.notes/FOLLOWUPS.md` #3 —
 > dokud nebude hotový, změna v jednom místě rozbije ostatní.
 
 ### 5. Nainstalovat VirtueMart
@@ -215,7 +215,7 @@ repo [otestované](#verze). Pokud chceš odlišnou kombinaci:
   a v několika skriptech, které sahají do DB přes `mariadb -uroot -pasdf`
   (`db-snapshot.sh`, `db-restore.sh`, `reinstall-module.sh`,
   `configure-vm-after-install.sh`). Refactor pull-from-`.env` čeká
-  v `.notes/FOLLOWUPS.md` #4 — dokud není hotový, změna hesla v jednom
+  v `.notes/FOLLOWUPS.md` #3 — dokud není hotový, změna hesla v jednom
   místě rozbije zbytek pipeline. V `localhost`-only devu je to bezpečné
   i s defaultním heslem.
 
