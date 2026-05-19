@@ -98,6 +98,12 @@ Co teď běží:
 | Mailpit (mail catcher) | http://localhost:8025 | — |
 | MariaDB (přímo z hosta) | `localhost:3308` | `root` / `asdf` |
 
+> **DB credentials `root` / `asdf` zatím neměň.** Hodnoty jsou hardcoded
+> v `docker-compose.yml` i v několika skriptech (`db-snapshot.sh`,
+> `db-restore.sh`, `reinstall-module.sh`, `configure-vm-after-install.sh`).
+> Refactor "credentials z `.env`" je v `.notes/FOLLOWUPS.md` #4 —
+> dokud nebude hotový, změna v jednom místě rozbije ostatní.
+
 ### 5. Nainstalovat VirtueMart
 
 > **Proč ručně, a ne skriptem jako modul (krok 10)?** VM má vlastní AIO
@@ -204,6 +210,14 @@ repo [otestované](#verze). Pokud chceš odlišnou kombinaci:
 - **MariaDB / Adminer / Mailpit** — verze v `docker-compose.yml`. Změna
   vyžaduje `./scripts/up.sh` (re-create kontejnerů). Pozor na zpětnou
   kompatibilitu DB dat (`./db/`) při downgrade MariaDB.
+- **DB credentials (`root` / `asdf`) zatím neměň.** Hodnoty jsou hardcoded
+  v `docker-compose.yml` (oba `MARIADB_ROOT_PASSWORD` i `JOOMLA_DB_PASSWORD`)
+  a v několika skriptech, které sahají do DB přes `mariadb -uroot -pasdf`
+  (`db-snapshot.sh`, `db-restore.sh`, `reinstall-module.sh`,
+  `configure-vm-after-install.sh`). Refactor pull-from-`.env` čeká
+  v `.notes/FOLLOWUPS.md` #4 — dokud není hotový, změna hesla v jednom
+  místě rozbije zbytek pipeline. V `localhost`-only devu je to bezpečné
+  i s defaultním heslem.
 
 ## Skripty
 

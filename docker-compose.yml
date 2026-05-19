@@ -17,6 +17,10 @@ services:
       - "8080:80"
 
     environment:
+      # DB credentials (root/asdf) jsou taky hardcoded v některých skriptech
+      # (db-snapshot, db-restore, reinstall-module, configure-vm-after-install).
+      # Než FOLLOWUPS #4 (pull-from-.env) doběhne, ZMĚNA HESLA TADY ROZBIJE TY
+      # SKRIPTY. Kompletní seznam míst je v .notes/FOLLOWUPS.md #4.
       JOOMLA_DB_HOST: dev_db
       JOOMLA_DB_USER: root
       JOOMLA_DB_PASSWORD: asdf
@@ -79,6 +83,8 @@ services:
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: joomla
+      # Heslo `asdf` je taky hardcoded ve scriptech sahájících do DB —
+      # neměň bez současné úpravy v FOLLOWUPS #4 seznamu míst.
       MARIADB_ROOT_PASSWORD: asdf
       TZ: Europe/Prague
     volumes:
