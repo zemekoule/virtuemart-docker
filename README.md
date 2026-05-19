@@ -213,8 +213,11 @@ Změní (pokud ještě nejsou):
 - `$smtpsecure = 'none'` (lokálně bez TLS)
 - `$mailfrom = 'admin@example.com'`, `$fromname = 'VirtueMart Dev'`
 
-Po nastavení můžeš test poslat z admina: **System → Maintenance → Send Test
-Mail**. Zachycenou zprávu uvidíš v Mailpitu na http://localhost:8025.
+Po nastavení ověř end-to-end pipeline přes `./scripts/send-test-mail.sh` —
+script naloaduje Joomla framework, zavolá `Factory::getMailer()->Send()`
+a zachycená zpráva se objeví v Mailpitu na http://localhost:8025.
+(Joomla 5 v admin UI samostatné "Send Test Mail" tlačítko nemá, takže test
+provádíme z CLI.)
 
 > **Pozor**: mail config je v `configuration.php` (soubor), ne v DB —
 > `db-snapshot.sh` / `db-restore.sh` ho nezasáhne. Přepnutí mezi DB snapshoty
@@ -222,6 +225,21 @@ Mail**. Zachycenou zprávu uvidíš v Mailpitu na http://localhost:8025.
 >
 > `php.ini` má `disable_functions = mail`, takže Joomla nemůže silent fallback
 > na PHP `mail()` — musí jít přes SMTP.
+
+### `scripts/send-test-mail.sh`
+
+Pošle testovací e-mail přes Joomla mailer (`Factory::getMailer()->Send()`).
+Užitečné pro ověření, že `configure-joomla-mail.sh` + SMTP konfigurace fungují
+end-to-end — pokud script vypíše *"Odesláno OK"* a zpráva se objeví v Mailpitu,
+celá pipeline (configuration.php → Joomla mailer → mailpit:1025) je v pořádku.
+
+```bash
+./scripts/send-test-mail.sh
+```
+
+Script naloaduje Joomla framework stejným patternem jako `cli/joomla.php`
+(bootstrap Console application, alias session.cli). Joomla 5 v admin UI vlastní
+"Send Test Mail" tlačítko nemá, takže test provádíme z CLI.
 
 ### `scripts/reinstall-module.sh`
 
