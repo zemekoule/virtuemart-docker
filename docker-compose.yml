@@ -24,7 +24,8 @@ services:
       JOOMLA_SITE_NAME: ${JOOMLA_SITE_NAME:-VirtueMart Dev}
       JOOMLA_ADMIN_USER: ${JOOMLA_ADMIN_USER:-Admin}
       JOOMLA_ADMIN_USERNAME: ${JOOMLA_ADMIN_USERNAME:-admin}
-      JOOMLA_ADMIN_PASSWORD: ${JOOMLA_ADMIN_PASSWORD:-adminadmin12}
+      # Joomla image vyžaduje heslo *delší* než 12 znaků, jinak auto-install spadne.
+      JOOMLA_ADMIN_PASSWORD: ${JOOMLA_ADMIN_PASSWORD:-adminadmin1234}
       JOOMLA_ADMIN_EMAIL: ${JOOMLA_ADMIN_EMAIL:-admin@example.com}
 
       # PhpStorm CLI debug
