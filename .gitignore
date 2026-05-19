@@ -9,4 +9,5 @@
 /packeta.zip
 /.notes/*
 !/.notes/README.md
+/screens/
 /CLAUDE.md

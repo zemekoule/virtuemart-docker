@@ -32,7 +32,7 @@ Po startu jsou dostupné:
 | Mailpit (mail catcher) | http://localhost:8025 | — |
 | MariaDB (přímo z hosta) | `localhost:3308` | `root` / `asdf` |
 
-Detailní workflow prvního spuštění je v sekci [VirtueMart — workflow caveats](#virtuemart--workflow-caveats)
+Detailní workflow prvního spuštění je v sekci [VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace)
 níže a v dokumentaci jednotlivých skriptů.
 
 ## Skripty
@@ -194,6 +194,24 @@ stejný pattern jako `configure-joomla-mail.sh`).
 > souboru, takže `db-restore.sh` ho nezasáhne — pokud script jednou spustíš,
 > debug zůstane on.
 
+### `scripts/configure-vm-after-install.sh`
+
+Po nahrání VirtueMart zipu (sekce
+[VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace))
+spustit **před kliknutím na "Install Sample Data"** na VM welcome screen.
+Skript přes SQL enabluje plugin `vmshipment - weight_countries`, který je
+po čisté instalaci VM `enabled=0`. Bez toho sample importer padne v PHP 8+
+na *"Attempt to assign property name on null"* v
+`helpers/vdispatcher.php:240`.
+
+```bash
+./scripts/configure-vm-after-install.sh
+```
+
+Idempotentní — `UPDATE ... WHERE enabled=0` zařídí, že druhý běh nedělá nic.
+Pokud sem v budoucnu přibudou další "extra" nastavení po čisté instalaci VM
+(která sample importer / běh storefrontu vyžaduje), patří do tohoto skriptu.
+
 ### `scripts/configure-joomla-mail.sh`
 
 Nastaví Joomla mail config tak, aby odesílal přes Mailpit (kontejner `mailpit`,
@@ -295,25 +313,46 @@ connection se znovu naváže při dalším requestu.
 Před destruktivním krokem se ptá. Po restoru ti admin odhlásí — sessions jsou
 uložené v DB.
 
-## VirtueMart — workflow caveats
+## VirtueMart — workflow čisté instalace
 
-Při práci s VirtueMartem v dev prostředí stojí za to vědět tři věci, které nejsou
-intuitivní:
+Při čisté instalaci VM (po `reset-env.sh` + `up.sh`) jsou tři ne-intuitivní věci:
 
-**Sample data install** — *Components → VirtueMart → Tools & Migration → Install
-sample data* spadne s *"Attempt to assign property name on null"*, dokud v
-**Extensions → Plugins** nezapneš plugin `vmshipment` → *VM - Shipment - Weight,
-Countries*. VM sample importer ho volá, ale defaultně je unpublished a v PHP 8+
-to vyhodí fatal.
+**Cesta k uploadu zipu.** V Joomle 5 *System → Install → Extensions* není
+souvislý menu chain — *Install* je sekce **na stránce System Dashboard**,
+ne submenu položka. Reálná cesta:
 
-**Reset VirtueMart tabulek** — volba *Reset all Virtuemart tables and do a fresh
-install with sample data* se v adminu zobrazí jen tehdy, když je ve **VM
-Configuration** zapnutá volba **Enable database Update tools**. Bez ní je
-funkcionalita schovaná.
+1. Sidebar **System** (otevře *System Dashboard*).
+2. Na System Dashboard sekce **Install** → klik na **Extensions**.
+3. Stránka *Extensions: Install*, tab **Upload Package File** (default).
+4. Drag/drop `install/com_virtuemart.<verze>_package_or_extract.zip` do dropzóny.
 
-**Baseline DB dump** — když máš čistý stav s VirtueMartem a sample daty, udělej si
-`./scripts/db-snapshot.sh clean-joomla-vm` (nebo s libovolným jménem). Z toho stavu
-se kdykoli vrátíš přes `db-restore.sh`.
+**Sample data importer padá v PHP 8+ bez `vmshipment - weight_countries`.**
+Po úspěšném uploadu zipu zůstaneš na *Extensions: Install* obrazovce s VM
+welcome screen ("Installation was SUCCESSFUL"). V sekci *Installing VirtueMart
+Plugins and Modules* je šedý inline odkaz **"Install Sample Data"** — ten ale
+teď neklikat. Nejdřív spustit:
+
+```bash
+./scripts/configure-vm-after-install.sh
+```
+
+Skript přes SQL enabluje plugin `vmshipment - weight_countries` (defaultně
+`enabled=0`). Bez toho sample importer padne na *"Attempt to assign property
+name on null"* v `helpers/vdispatcher.php:240`. Teprve po skriptu klik
+na **Install Sample Data** — landing page *Updating & Data migration*
+ohlásí *"Sample data installed!!"*.
+
+**Baseline DB dump.** Po úspěšném importu jsi v cílovém stavu pro další práci
+na modulu. Udělej `./scripts/db-snapshot.sh clean-joomla-vm` — z toho se
+kdykoli vrátíš přes `db-restore.sh`.
+
+### Reset VM tabulek (volitelné, pro re-install scénáře)
+
+Pokud chceš VM zresetovat a importovat sample data znovu (např. po
+experimentech s vlastními daty), je ve *VM Configuration* potřeba zapnout
+volbu **Enable database Update tools**; pak se v *Tools & Migration* zobrazí
+*Reset all Virtuemart tables and do a fresh install with sample data*. Pro
+běžný clean install workflow ale stačí `db-restore.sh` s baseline snapshotem.
 
 **VirtueMart installer v `install/`** — `install/com_virtuemart.<verze>_package_or_extract.zip`
 je commitnutý (cca 6 MB), aby každý klonující měl rovnou čím VM nainstalovat přes
