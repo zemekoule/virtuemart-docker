@@ -199,18 +199,32 @@ stejný pattern jako `configure-joomla-mail.sh`).
 Po nahrání VirtueMart zipu (sekce
 [VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace))
 spustit **před kliknutím na "Install Sample Data"** na VM welcome screen.
-Skript přes SQL enabluje plugin `vmshipment - weight_countries`, který je
-po čisté instalaci VM `enabled=0`. Bez toho sample importer padne v PHP 8+
-na *"Attempt to assign property name on null"* v
-`helpers/vdispatcher.php:240`.
+Skript udělá dvě věci, které VM defaultně nezařídí sám:
+
+1. **Enable plugin `vmshipment - weight_countries`** (SQL UPDATE). Bez něj
+   sample importer padne v PHP 8+ na *"Attempt to assign property name on
+   null"* v `helpers/vdispatcher.php:240`.
+2. **Setup Safe Path** — mkdir `<webroot>/administrator/components/com_virtuemart/safepath/`
+   (+ podsložky `keys/`, `invoices/`) a zápis cesty do
+   `joom_virtuemart_configs.config` (`forSale_path`). Bez toho VM hází nag
+   warningy *"Safe Path is not configured yet"* a *"folder invoices does
+   not exist..."* na každé admin stránce.
 
 ```bash
 ./scripts/configure-vm-after-install.sh
 ```
 
-Idempotentní — `UPDATE ... WHERE enabled=0` zařídí, že druhý běh nedělá nic.
-Pokud sem v budoucnu přibudou další "extra" nastavení po čisté instalaci VM
-(která sample importer / běh storefrontu vyžaduje), patří do tohoto skriptu.
+Idempotentní:
+
+- Plugin update má `WHERE enabled = 0` — druhý běh nezasahuje.
+- `mkdir -p` je no-op, pokud adresář existuje.
+- `forSale_path` přepis používá `preg_replace` v PHP one-shotu; pokud je
+  hodnota už cílová, zapíše se zpráva *"forSale_path už nastaveno...
+  (skip)"* a žádný DB write se nedělá.
+
+Pokud sem v budoucnu přibudou další "extra" nastavení po čisté instalaci
+VM (která sample importer / běh storefrontu vyžaduje), patří do tohoto
+skriptu.
 
 ### `scripts/configure-joomla-mail.sh`
 
@@ -326,21 +340,30 @@ ne submenu položka. Reálná cesta:
 3. Stránka *Extensions: Install*, tab **Upload Package File** (default).
 4. Drag/drop `install/com_virtuemart.<verze>_package_or_extract.zip` do dropzóny.
 
-**Sample data importer padá v PHP 8+ bez `vmshipment - weight_countries`.**
-Po úspěšném uploadu zipu zůstaneš na *Extensions: Install* obrazovce s VM
-welcome screen ("Installation was SUCCESSFUL"). V sekci *Installing VirtueMart
-Plugins and Modules* je šedý inline odkaz **"Install Sample Data"** — ten ale
-teď neklikat. Nejdřív spustit:
+**Po VM uploadu spusť `configure-vm-after-install.sh`.** Po úspěšném uploadu
+zipu zůstaneš na *Extensions: Install* obrazovce s VM welcome screen
+("Installation was SUCCESSFUL"). V sekci *Installing VirtueMart Plugins and
+Modules* je šedý inline odkaz **"Install Sample Data"** — ten ale teď
+neklikat. Nejdřív:
 
 ```bash
 ./scripts/configure-vm-after-install.sh
 ```
 
-Skript přes SQL enabluje plugin `vmshipment - weight_countries` (defaultně
-`enabled=0`). Bez toho sample importer padne na *"Attempt to assign property
-name on null"* v `helpers/vdispatcher.php:240`. Teprve po skriptu klik
-na **Install Sample Data** — landing page *Updating & Data migration*
-ohlásí *"Sample data installed!!"*.
+Skript přes SQL / mkdir udělá dvě věci, které VM defaultně nezařídí sám:
+
+1. **Enabluje plugin `vmshipment - weight_countries`** (defaultně `enabled=0`).
+   Bez toho sample importer padá v PHP 8+ na *"Attempt to assign property
+   name on null"* v `helpers/vdispatcher.php:240`.
+2. **Nakonfiguruje VM Safe Path** — vytvoří
+   `<webroot>/administrator/components/com_virtuemart/safepath/` (+ podsložky
+   `keys/` a `invoices/`) a zapíše hlavní cestu do
+   `joom_virtuemart_configs.config` (`forSale_path`). Bez toho VM hází
+   warningy *"Safe Path is not configured yet"* a *"folder invoices does
+   not exist..."* na každé admin stránce.
+
+Teprve po skriptu klik na **Install Sample Data** — landing page *Updating
+& Data migration* ohlásí *"Sample data installed!!"*.
 
 **Baseline DB dump.** Po úspěšném importu jsi v cílovém stavu pro další práci
 na modulu. Udělej `./scripts/db-snapshot.sh clean-joomla-vm` — z toho se
