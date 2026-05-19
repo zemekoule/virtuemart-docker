@@ -5,18 +5,21 @@ FROM joomla:${JOOMLA_TAG}-php${PHP_VERSION}-apache
 ARG ARG_UID=1000
 ARG ARG_GID=1000
 
-# Build tools potřebné pro pecl install, pak je smažeme
+# Build tools potřebné pro pecl install / docker-php-ext-install, pak je smažeme.
+# libxml2-dev je build dep pro soap (runtime libxml2 zůstává - drží ho jiné balíčky).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
       $PHPIZE_DEPS \
+      libxml2-dev \
       zip unzip \
       default-mysql-client \
       less mc bash-completion \
   && pecl install xdebug \
   && docker-php-ext-enable xdebug \
+  && docker-php-ext-install soap \
   && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
   && composer completion bash > /root/.composer-completion.bash \
-  && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+  && apt-get purge -y --auto-remove $PHPIZE_DEPS libxml2-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
