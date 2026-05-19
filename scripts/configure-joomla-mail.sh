@@ -72,8 +72,9 @@ PHP
 cat <<EOF
 
 Mail teď chodí přes Mailpit: http://localhost:8025
-Doporučení: po prvním běhu zkus poslat z Joomla admina test e-mail
-(System → Maintenance → Send Test Mail) a uvidíš ho v Mailpitu.
+Doporučení: zkontroluj end-to-end přes
+  ./scripts/send-test-mail.sh
+a uvidíš zprávu v Mailpitu.
 Pokud chceš mít tento stav v baseline DB dumpu, udělej nový snapshot:
   ./scripts/db-snapshot.sh clean-joomla-vm-mail
 (Pozn.: mail config sám o sobě je v configuration.php na souborovém systému, ne v DB —
