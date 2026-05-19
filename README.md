@@ -12,9 +12,15 @@ Adminer + Mailpit.
 ## Rychlý start
 
 ```bash
+git clone git@github.com:Zasilkovna/virtuemart3.git modules/packeta
 cp .env.example .env       # vyplnit ENV_UID/GID podle `id -u` / `id -g`
 ./scripts/up.sh            # build a start celého stacku
 ```
+
+`modules/packeta/` je v `.gitignore` — modul má vlastní upstream repo
+([Zasilkovna/virtuemart3](https://github.com/Zasilkovna/virtuemart3)) a tady ho
+jen mountujeme do Joomly. Bez klonu nebude `install-module.sh` mít co
+zazipovat.
 
 Po startu jsou dostupné:
 
@@ -290,6 +296,13 @@ funkcionalita schovaná.
 **Baseline DB dump** — když máš čistý stav s VirtueMartem a sample daty, udělej si
 `./scripts/db-snapshot.sh clean-joomla-vm` (nebo s libovolným jménem). Z toho stavu
 se kdykoli vrátíš přes `db-restore.sh`.
+
+**VirtueMart installer v `install/`** — `install/com_virtuemart.<verze>_package_or_extract.zip`
+je commitnutý (cca 6 MB), aby každý klonující měl rovnou čím VM nainstalovat přes
+**System → Install → Extensions → Upload Package File**. Není to ale latest verze
+napořád — když [virtuemart.net/download](https://virtuemart.net/download) vydá novou,
+stáhni ji, nahraď zip v `install/` a starý smaž (v repu chceme jen jeden, aby
+nebylo nejasné, který použít).
 
 ## PhpStorm setup
 

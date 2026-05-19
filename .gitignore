@@ -5,7 +5,7 @@
 /db/
 /mailpit/
 /db-snapshots/
-/modules/packeta/.git/
+/modules/
 /packeta.zip
 /.notes/*
 !/.notes/README.md
