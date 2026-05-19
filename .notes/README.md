@@ -1,17 +1,33 @@
-# `.notes/` — lokální poznámky vývojáře
+# `.notes/` — verzované týmové poznámky k dev prostředí
 
-Tato složka je určená pro **lokální, neverzované poznámky** vývojářů pracujících
-na tomto dev prostředí. Typicky:
+Tato složka je **commitnutá v repu** a obsahuje:
 
-- vlastní plán prací (např. `PLAN_docker_environment.md`)
-- seznam follow-upů a TODO, které ses rozhodl(a) odložit (`FOLLOWUPS.md`)
-- ad-hoc poznámky, dump terminalu, výpisy z debugu, návrhy, scratchpad
+- **`PLAN_docker_environment.md`** — vývojový plán s odsouhlasenými
+  rozhodnutími, otevřenými otázkami a TODO ke třem kolům prací
+  na dev prostředí.
+- **`FOLLOWUPS.md`** — známé technické dluhy a follow-upy, které jsme
+  záměrně odložili (s odůvodněním a plánem řešení).
+- **`ACCEPTANCE_TEST.md`** — pracovní log akceptačního testu
+  (11 kroků end-to-end, sloupec *Findings*, diskrepance dokumentace
+  ↔ reality, follow-upy z testu).
 
-Obsah `.notes/` je v `.gitignore` (kromě tohoto `README.md`), takže každý vývojář
-si tu může držet to své, aniž by to vstupovalo do PR.
+Cíl: nový developer otevře tuhle složku a hned vidí, **co se dělalo,
+proč, co je hotovo a co zbývá**. Hlavní `README.md` v rootu je referenční,
+sem patří kontext a rozhodnutí.
 
 ## Co sem nepatří
 
-- věci, které by měl vidět i kolega — ty patří do `README.md` v rootu
-- konfigurace, kterou potřebuje runtime (`.env`, `php.ini`, `xdebug.ini`, …)
-- skripty (`scripts/`)
+- **Osobní poznámky** (zápisky, scratchpad, věci na úkor mě osobně) —
+  patří do `private-notes.md` v rootu (gitignored).
+- **Runtime config** (`.env`, `php.ini`, `xdebug.ini`, …) — ty mají
+  vlastní místo v rootu.
+- **Skripty** — `scripts/`.
+- **Code** — `modules/packeta/` pro modul, `src/` pro Joomla runtime.
+
+## Historie
+
+Až do `warn-against-changing-db-creds` PR byla tahle složka v `.gitignore`
+(jen `README.md` byl tracked) — sloužila jako developer scratchpad. Po
+realizaci, že obsah má dlouhodobou hodnotu a hrozí ztráta, jsme ji
+graduovali na committed. Osobní item (Bear KB plán) přesunut do
+gitignored `private-notes.md`.
