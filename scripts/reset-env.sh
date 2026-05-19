@@ -83,14 +83,15 @@ cat <<EOF
 Hotovo. Prostředí je čisté. Další krok:
   ./scripts/up.sh
 
-Po startu projdi workflow z PLAN_docker_environment.md nebo README — typicky:
-  1. http://localhost:8080/administrator (admin / adminadmin1234)
-  2. System → Install → Extensions → upload install/com_virtuemart...zip
-  3. Extensions → Plugins → enable 'vmshipment - Weight, Countries'
-  4. Components → VirtueMart → Configuration → Enable database Update tools
-  5. Tools & Migration → Reset all Virtuemart tables and do a fresh install with sample data
-  6. ./scripts/configure-joomla-mail.sh
-  7. ./scripts/configure-joomla-debug.sh
-  8. ./scripts/db-snapshot.sh clean-joomla-vm
-  9. ./scripts/install-module.sh
+Po startu projdi workflow z README (sekce 'VirtueMart — workflow čisté instalace'):
+  1. http://localhost:8080/administrator   (admin / adminadmin1234)
+  2. Sidebar System -> System Dashboard -> sekce Install -> Extensions
+     -> tab Upload Package File -> drag install/com_virtuemart*.zip do dropzóny
+  3. ./scripts/configure-vm-after-install.sh   (enabluje weight_countries plugin)
+  4. Na VM welcome screen klik šedý inline odkaz "Install Sample Data"
+     (v sekci "Installing VirtueMart Plugins and Modules") -> success page
+  5. ./scripts/configure-joomla-mail.sh
+  6. ./scripts/configure-joomla-debug.sh
+  7. ./scripts/db-snapshot.sh clean-joomla-vm
+  8. ./scripts/install-module.sh
 EOF
