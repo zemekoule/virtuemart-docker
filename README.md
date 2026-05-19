@@ -1,8 +1,34 @@
 # Packeta — Docker dev prostředí pro VirtueMart
 
 Lokální vývojové prostředí v Dockeru pro modul **Packeta** (plugin `vmshipment/zasilkovna`)
-do VirtueMart na Joomle. Stack: Joomla 5 + Apache + PHP 8.3 + Xdebug + MariaDB 12 +
+do VirtueMart na Joomle. Stack: Joomla + Apache + PHP + Xdebug + MariaDB +
 Adminer + Mailpit.
+
+## Pro koho je tento README
+
+- **Vývojář, který sem přichází poprvé** — projdi shora dolů sekce
+  [Verze](#verze), [Předpoklady](#předpoklady), [Rychlý start](#rychlý-start).
+  Skončíš s funkčním dev prostředím, na kterém můžeš začít pracovat na modulu.
+- **Vývojář, který už projekt zná a hledá referenci** — přeskoč rovnou na
+  [Skripty](#skripty), [VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace),
+  nebo [PhpStorm setup](#phpstorm-setup).
+
+## Verze
+
+To, na čem je projekt **postavený a otestovaný** (default stack):
+
+| Komponenta | Verze | Kde se konfiguruje |
+|---|---|---|
+| Joomla | 5 (latest minor z tagu `joomla:5-php8.3-apache`) | `.env` (`JOOMLA_TAG`) |
+| PHP | 8.3 | `.env` (`PHP_VERSION`) |
+| VirtueMart | 4.6.4.11226 (z `install/com_virtuemart.4.6.4.11226_package_or_extract.zip`) | manuální upload — viz [workflow](#virtuemart--workflow-čisté-instalace) |
+| MariaDB | 12 | `docker-compose.yml` |
+| Xdebug | 3.5.x (latest z PECL při buildu) | `Dockerfile` |
+| Apache | 2.4.x (z `joomla:5-php8.3-apache` base image) | base image |
+
+Modul samotný cílí kompatibilitu **Joomla 4 + 5, VirtueMart 4, PHP 8.1 – 8.5**,
+ale ostatní kombinace nejsou v tomto repo defaultně otestované. Postup
+pro jejich vyzkoušení je v sekci [Změna verzí](#změna-verzí).
 
 ## Předpoklady
 
@@ -11,29 +37,162 @@ Adminer + Mailpit.
 
 ## Rychlý start
 
+Předpokládá Docker, git a ssh klíč nastavený pro GitHub. Sekvence od nuly:
+
+### 1. Naklonovat tento repo
+
 ```bash
-git clone git@github.com:Zasilkovna/virtuemart3.git modules/packeta
-cp .env.example .env       # vyplnit ENV_UID/GID podle `id -u` / `id -g`
-./scripts/up.sh            # build a start celého stacku
+mkdir -p ~/dev && cd ~/dev
+git clone git@github.com:zemekoule/virtuemart-docker.git
+cd virtuemart-docker
 ```
 
-`modules/packeta/` je v `.gitignore` — modul má vlastní upstream repo
-([Zasilkovna/virtuemart3](https://github.com/Zasilkovna/virtuemart3)) a tady ho
-jen mountujeme do Joomly. Bez klonu nebude `install-module.sh` mít co
-zazipovat.
+(`~/dev` je doporučení, použij libovolný adresář — zbytek README předpokládá,
+že jsi v rootu naklonovaného repa `virtuemart-docker/`.)
 
-Po startu jsou dostupné:
+### 2. Naklonovat modul Packeta do `modules/packeta/`
+
+Modul má vlastní upstream repo ([`Zasilkovna/virtuemart3`](https://github.com/Zasilkovna/virtuemart3))
+a v tomto repu je gitignored (`/modules/` v `.gitignore`). Klonujeme ho samostatně:
+
+```bash
+git clone git@github.com:Zasilkovna/virtuemart3.git modules/packeta
+```
+
+Bez tohohle kroku nebude bind-mount do Joomly mít co mountovat a
+`install-module.sh` nebude mít co zazipovat.
+
+### 3. Vytvořit `.env` z příkladu a vyplnit UID/GID
+
+```bash
+cp .env.example .env
+```
+
+Edituj `.env` a nastav `ENV_UID` a `ENV_GID` podle hostitele:
+
+- **Linux:** typicky `1000:1000` (zjisti přes `id -u` a `id -g`)
+- **macOS:** typicky `501:20` (`id -u` / `id -g` pro jistotu)
+
+Tím se UID/GID `www-data` v kontejneru sjednotí s tvým user, aby soubory
+v `./src/` a `./modules/` měly správného vlastníka.
+
+### 4. Build image a start stacku
+
+```bash
+./scripts/up.sh
+```
+
+První build trvá pár minut (build PHP + Xdebug + SOAP). Při dalších `up.sh`
+už cache image použije.
+
+Joomla auto-installer proběhne při prvním HTTP requestu — počkej ~30 sekund
+a otevři **http://localhost:8080** nebo **http://localhost:8080/administrator**.
+
+Co teď běží:
 
 | Služba | URL / port | Login |
 |---|---|---|
 | Joomla frontend | http://localhost:8080 | — |
 | Joomla admin | http://localhost:8080/administrator | `admin` / `adminadmin1234` |
-| Adminer (DB UI) | http://localhost:8081 | server `dev_db`, user `root`, pass `asdf` |
+| Adminer (DB UI) | http://localhost:8081 | server `dev_db`, user `root`, heslo `asdf` |
 | Mailpit (mail catcher) | http://localhost:8025 | — |
 | MariaDB (přímo z hosta) | `localhost:3308` | `root` / `asdf` |
 
-Detailní workflow prvního spuštění je v sekci [VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace)
-níže a v dokumentaci jednotlivých skriptů.
+### 5. Nainstalovat VirtueMart
+
+V adminu klikni: **Sidebar System → System Dashboard → sekce Install → Extensions → tab Upload Package File**.
+Do dropzóny přetáhni `install/com_virtuemart.4.6.4.11226_package_or_extract.zip`.
+
+Detaily, screenshoty a popis VM AIO post-install obrazovky jsou v sekci
+[VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace).
+
+> **Nezavírej zatím** VM AIO welcome screen a **neklikej** na "Install Sample Data" —
+> nejdřív další krok.
+
+### 6. Spustit `configure-vm-after-install.sh`
+
+```bash
+./scripts/configure-vm-after-install.sh
+```
+
+Skript přes SQL/mkdir enabluje shipment plugin `weight_countries` (bez něj
+sample importer padá v PHP 8+) a vytvoří + nastaví VM Safe Path (bez něj VM
+hází warningy na každé admin stránce). Detaily v
+[dokumentaci skriptu](#scriptsconfigure-vm-after-installsh).
+
+### 7. Naimportovat VM sample data
+
+Vrať se na záložku s VM AIO welcome screenem (Joomla admin → *Extensions: Install*)
+a klikni na šedý inline odkaz **"Install Sample Data"** v sekci
+*"Installing VirtueMart Plugins and Modules"*. Po importu přistaneš na stránce
+*Updating & Data migration* s green hláškou `Sample data installed!!`.
+
+### 8. Nastavit SMTP a debug mode
+
+```bash
+./scripts/configure-joomla-mail.sh    # mail přes Mailpit (:8025)
+./scripts/configure-joomla-debug.sh   # $debug=true + error_reporting=maximum
+```
+
+Ověř, že mail pipeline funguje:
+
+```bash
+./scripts/send-test-mail.sh
+```
+
+Zpráva se objeví v Mailpitu na http://localhost:8025.
+
+### 9. Udělat baseline DB snapshot
+
+```bash
+./scripts/db-snapshot.sh clean-joomla-vm
+```
+
+Dump skončí v `./db-snapshots/clean-joomla-vm.sql`. Z toho stavu se kdykoli
+vrátíš přes `./scripts/db-restore.sh clean-joomla-vm` (bez nového VM install
+workflow).
+
+### 10. Nainstalovat modul Packeta
+
+```bash
+./scripts/install-module.sh
+```
+
+Modul je teď v Joomle jako plugin (`folder=vmshipment, element=zasilkovna`).
+Defaultně `enabled=0` — povolit musíš v adminu: **Extensions → Plugins**,
+filter `vmshipment`, klik na status u *Packeta*.
+
+### Hotovo
+
+Dev prostředí je připravené. Můžeš:
+
+- Otevřít projekt v PhpStormu — viz [PhpStorm setup](#phpstorm-setup).
+- Editovat soubory v `modules/packeta/` — díky live bind-mountu jsou změny
+  PHP okamžitě live; jen při změně `zasilkovna.xml`, `install.sql` nebo
+  jazykových souborů spusť `./scripts/reinstall-module.sh`.
+- Kdykoli vrátit DB do baseline přes `./scripts/db-restore.sh clean-joomla-vm`.
+- Plně resetovat prostředí přes `./scripts/reset-env.sh` (volitelně
+  `--with-image` pro rebuild od Dockerfile).
+
+## Změna verzí
+
+Default stack (Joomla 5 + PHP 8.3 + VM 4.6.4) odpovídá tomu, co repo
+[testuje](#verze). Pokud chceš odlišnou kombinaci:
+
+- **Joomla / PHP** — uprav `JOOMLA_TAG` a `PHP_VERSION` v `.env`. Dostupné
+  kombinace tagů: viz [`joomla` na Docker Hubu](https://hub.docker.com/_/joomla/tags)
+  (např. `4-php8.1-apache`, `5-php8.2-apache`). Po změně `.env` spusť
+  `./scripts/reset-env.sh --with-image` (smaže image i runtime state)
+  a pak `./scripts/up.sh` (rebuild). PHP 8.4 a 8.5 zatím v oficiálních
+  `joomla:` tagách nejsou, vyžadovaly by vlastní stack (`php:8.4-apache` +
+  ruční Joomla install) — viz `PLAN_docker_environment.md` 3. kolo.
+- **VirtueMart** — stáhni novější ZIP z [virtuemart.net/download](https://virtuemart.net/download),
+  nahraď `install/com_virtuemart.*.zip` (v repu chceme jen jeden, aby
+  nebylo nejasné, který použít) a commitni. Workflow čisté instalace
+  zůstává stejný.
+- **MariaDB / Adminer / Mailpit** — verze v `docker-compose.yml`. Změna
+  vyžaduje `./scripts/up.sh` (re-create kontejnerů). Pozor na zpětnou
+  kompatibilitu DB dat (`./db/`) při downgrade MariaDB.
 
 ## Skripty
 
