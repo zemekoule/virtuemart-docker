@@ -10,7 +10,7 @@ Adminer + Mailpit.
   [Verze](#verze), [Předpoklady](#předpoklady), [Rychlý start](#rychlý-start).
   Skončíš s funkčním dev prostředím, na kterém můžeš začít pracovat na modulu.
 - **Vývojář, který už projekt zná a hledá referenci** — přeskoč rovnou na
-  [Skripty](#skripty), [VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace),
+  [Skripty](#skripty), [Reset VM tabulek pro re-install](#reset-vm-tabulek-pro-re-install),
   nebo [PhpStorm setup](#phpstorm-setup).
 
 ## Verze
@@ -21,7 +21,7 @@ To, na čem je projekt **postavený a otestovaný** (default stack):
 |---|---|---|
 | Joomla | 5 (latest minor z tagu `joomla:5-php8.3-apache`) | `.env` (`JOOMLA_TAG`) |
 | PHP | 8.3 | `.env` (`PHP_VERSION`) |
-| VirtueMart | 4.6.4.11226 (z `install/com_virtuemart.4.6.4.11226_package_or_extract.zip`) | manuální upload — viz [workflow](#virtuemart--workflow-čisté-instalace) |
+| VirtueMart | 4.6.4.11226 (z `install/com_virtuemart.4.6.4.11226_package_or_extract.zip`) | manuální upload — viz [Rychlý start](#rychlý-start) krok 5 |
 | MariaDB | 12 | `docker-compose.yml` |
 | Xdebug | 3.5.x (latest z PECL při buildu) | `Dockerfile` |
 | Apache | 2.4.x (z `joomla:5-php8.3-apache` base image) | base image |
@@ -110,9 +110,6 @@ Co teď běží:
 
 V adminu klikni: **Sidebar System → System Dashboard → sekce Install → Extensions → tab Upload Package File**.
 Do dropzóny přetáhni `install/com_virtuemart.4.6.4.11226_package_or_extract.zip`.
-
-Detaily, screenshoty a popis VM AIO post-install obrazovky jsou v sekci
-[VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace).
 
 > **Nezavírej zatím** VM AIO welcome screen a **neklikej** na "Install Sample Data" —
 > nejdřív další krok.
@@ -363,8 +360,7 @@ stejný pattern jako `configure-joomla-mail.sh`).
 
 ### `scripts/configure-vm-after-install.sh`
 
-Po nahrání VirtueMart zipu (sekce
-[VirtueMart — workflow čisté instalace](#virtuemart--workflow-čisté-instalace))
+Po nahrání VirtueMart zipu (krok 5 v [Rychlém startu](#rychlý-start))
 spustit **před kliknutím na "Install Sample Data"** na VM welcome screen.
 Skript udělá dvě věci, které VM defaultně nezařídí sám:
 
@@ -494,62 +490,14 @@ connection se znovu naváže při dalším requestu.
 Před destruktivním krokem se ptá. Po restoru ti admin odhlásí — sessions jsou
 uložené v DB.
 
-## VirtueMart — workflow čisté instalace
-
-Při čisté instalaci VM (po `reset-env.sh` + `up.sh`) jsou tři ne-intuitivní věci:
-
-**Cesta k uploadu zipu.** V Joomle 5 *System → Install → Extensions* není
-souvislý menu chain — *Install* je sekce **na stránce System Dashboard**,
-ne submenu položka. Reálná cesta:
-
-1. Sidebar **System** (otevře *System Dashboard*).
-2. Na System Dashboard sekce **Install** → klik na **Extensions**.
-3. Stránka *Extensions: Install*, tab **Upload Package File** (default).
-4. Drag/drop `install/com_virtuemart.<verze>_package_or_extract.zip` do dropzóny.
-
-**Po VM uploadu spusť `configure-vm-after-install.sh`.** Po úspěšném uploadu
-zipu zůstaneš na *Extensions: Install* obrazovce s VM welcome screen
-("Installation was SUCCESSFUL"). V sekci *Installing VirtueMart Plugins and
-Modules* je šedý inline odkaz **"Install Sample Data"** — ten ale teď
-neklikat. Nejdřív:
-
-```bash
-./scripts/configure-vm-after-install.sh
-```
-
-Skript přes SQL / mkdir udělá dvě věci, které VM defaultně nezařídí sám:
-
-1. **Enabluje plugin `vmshipment - weight_countries`** (defaultně `enabled=0`).
-   Bez toho sample importer padá v PHP 8+ na *"Attempt to assign property
-   name on null"* v `helpers/vdispatcher.php:240`.
-2. **Nakonfiguruje VM Safe Path** — vytvoří
-   `<webroot>/administrator/components/com_virtuemart/safepath/` (+ podsložky
-   `keys/` a `invoices/`) a zapíše hlavní cestu do
-   `joom_virtuemart_configs.config` (`forSale_path`). Bez toho VM hází
-   warningy *"Safe Path is not configured yet"* a *"folder invoices does
-   not exist..."* na každé admin stránce.
-
-Teprve po skriptu klik na **Install Sample Data** — landing page *Updating
-& Data migration* ohlásí *"Sample data installed!!"*.
-
-**Baseline DB dump.** Po úspěšném importu jsi v cílovém stavu pro další práci
-na modulu. Udělej `./scripts/db-snapshot.sh clean-joomla-vm` — z toho se
-kdykoli vrátíš přes `db-restore.sh`.
-
-### Reset VM tabulek (volitelné, pro re-install scénáře)
+## Reset VM tabulek pro re-install
 
 Pokud chceš VM zresetovat a importovat sample data znovu (např. po
 experimentech s vlastními daty), je ve *VM Configuration* potřeba zapnout
 volbu **Enable database Update tools**; pak se v *Tools & Migration* zobrazí
 *Reset all Virtuemart tables and do a fresh install with sample data*. Pro
-běžný clean install workflow ale stačí `db-restore.sh` s baseline snapshotem.
-
-**VirtueMart installer v `install/`** — `install/com_virtuemart.<verze>_package_or_extract.zip`
-je commitnutý (cca 6 MB), aby každý klonující měl rovnou čím VM nainstalovat přes
-**System → Install → Extensions → Upload Package File**. Není to ale latest verze
-napořád — když [virtuemart.net/download](https://virtuemart.net/download) vydá novou,
-stáhni ji, nahraď zip v `install/` a starý smaž (v repu chceme jen jeden, aby
-nebylo nejasné, který použít).
+běžný clean install workflow ale stačí `db-restore.sh` s baseline
+snapshotem (krok 9 z [Rychlého startu](#rychlý-start)).
 
 ## PhpStorm setup
 
