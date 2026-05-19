@@ -41,11 +41,34 @@ services:
         source: ./modules/packeta
         target: /var/www/packeta-dev
 
-      # Live bind pro plugin — každá změna PHP souboru v modulu je okamžitě live.
-      # Reinstall je třeba jen při změně `zasilkovna.xml`, `install.sql` nebo lang souborů.
+      # Live bind pro plugin (jeho kořenové soubory: zasilkovna.php / .xml / install.sql).
+      # Změna PHP v rootu modulu je okamžitě live. Reinstall je třeba při změně
+      # manifestu (`zasilkovna.xml`) nebo `install.sql`.
       - type: bind
         source: ./modules/packeta
         target: /var/www/html/plugins/vmshipment/zasilkovna
+
+      # Live bind admin-side souborů modulu, které `install.zasilkovna.php` přes
+      # `recurse_copy` rozkopírovává do VM admin tree mimo plugin folder.
+      # Bez těchto bindů by editace odkrývaných souborů vyžadovala
+      # `./scripts/reinstall-module.sh` po každé změně.
+      # Při reinstallu pack-module.sh pakuje ze zdroje, takže recurse_copy zapisuje
+      # source → media → source (přes bind mount) — net efekt žádný, bezpečné.
+      #
+      # POZN: Bindujeme JEN celé adresáře, ne jednotlivé soubory. Docker Desktop
+      # na macOS (virtiofs) neumí vytvořit file mountpoint, když cílový soubor
+      # ještě neexistuje (u prvního up.sh před prvním install-module to neexistuje).
+      # Adresářové mountpointy si Docker vytvoří sám.
+      # Soubory pod admin/com_virtuemart/ MIMO tyto dva adresáře (controllers/zasilkovna.php,
+      # models/zasilkovna.php, models/zasilkovna_orders.php, models/rules/minvalue.php,
+      # fields/vmzasilkovna*.php, lang ini) pořád vyžadují reinstall — méně časté
+      # ediční hot spoty.
+      - type: bind
+        source: ./modules/packeta/media/admin/com_virtuemart/views/zasilkovna
+        target: /var/www/html/administrator/components/com_virtuemart/views/zasilkovna
+      - type: bind
+        source: ./modules/packeta/media/admin/com_virtuemart/models/zasilkovna_src
+        target: /var/www/html/administrator/components/com_virtuemart/models/zasilkovna_src
 
     networks:
       - vm_network

@@ -172,9 +172,15 @@ filter `vmshipment`, klik na status u *Packeta*.
 Dev prostředí je připravené. Můžeš:
 
 - Otevřít projekt v PhpStormu — viz [PhpStorm setup](#phpstorm-setup).
-- Editovat soubory v `modules/packeta/` — díky live bind-mountu jsou změny
-  PHP okamžitě live; jen při změně `zasilkovna.xml`, `install.sql` nebo
-  jazykových souborů spusť `./scripts/reinstall-module.sh`.
+- Editovat soubory v `modules/packeta/` — díky bind-mountům jsou změny
+  okamžitě live ve většině zdrojů: kořen modulu (hlavně `zasilkovna.php`),
+  `media/admin/com_virtuemart/views/zasilkovna/` (view templates) a
+  `media/admin/com_virtuemart/models/zasilkovna_src/` (class library).
+  Reinstall (`./scripts/reinstall-module.sh`) je třeba při změně manifestu
+  (`zasilkovna.xml`), `install.sql` nebo souborů, které install rozkopírovává
+  do VM admin mimo bind-mountnuté cesty (`controllers/zasilkovna.php`,
+  `models/zasilkovna*.php` mimo `zasilkovna_src/`, `models/rules/minvalue.php`,
+  `fields/vmzasilkovna*.php`, `media/admin/*.ini` jazykové soubory).
 - Kdykoli vrátit DB do baseline přes `./scripts/db-restore.sh clean-joomla-vm`.
 - Plně resetovat prostředí přes `./scripts/reset-env.sh` (volitelně
   `--with-image` pro rebuild od Dockerfile).
@@ -337,10 +343,14 @@ Po úspěšné instalaci je plugin v `#__extensions` jako `folder=vmshipment,
 element=zasilkovna`. Defaultně `enabled=0` — povolit musíš v adminu:
 **Extensions → Plugins**, filter `vmshipment`, klik na status pluginu *Packeta*.
 
-> Pokud máš v `docker-compose.yml` odkomentovaný druhý bind-mount
-> (`./modules/packeta` → `/var/www/html/plugins/vmshipment/zasilkovna`), reinstall
-> potřebuješ jen při změnách `zasilkovna.xml`, `install.sql` nebo lang souborů —
-> změny PHP souborů jsou live.
+> `docker-compose.yml` bind-mountuje plugin (`./modules/packeta` →
+> `/var/www/html/plugins/vmshipment/zasilkovna`) plus dva exkluzivní podadresáře
+> ve VM admin tree (`views/zasilkovna/` a `models/zasilkovna_src/`). Reinstall
+> je tedy potřeba jen při změně manifestu (`zasilkovna.xml`), `install.sql`,
+> jazykových `.ini` souborů, nebo souborů, které `install.zasilkovna.php`
+> přes `recurse_copy` kopíruje do mimo bind-mountnutých cest VM adminu
+> (controllers, většina models, fields, rules). Pro běžné editace
+> view templates a tříd v `models/zasilkovna_src/` je vše live.
 
 ### `scripts/configure-joomla-debug.sh`
 
@@ -455,7 +465,7 @@ Co dělá:
 4. Spustí `install-module.sh` — Joomla teď nenajde extension row, takže to **není
    update path, ale install path** → `install.sql` se spustí znovu od nuly.
 
-> **NEpoužívá Joomla `extension:remove` záměrně.** S aktivním druhým bind-mountem
+> **NEpoužívá Joomla `extension:remove` záměrně.** S aktivním plugin bind-mountem
 > by Joomla při uninstallu mazala soubory v `/plugins/vmshipment/zasilkovna/`,
 > což přes bind mount znamená smazat source files v `modules/packeta/` na hostu.
 >
