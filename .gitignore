@@ -7,7 +7,6 @@
 /db-snapshots/
 /modules/
 /packeta.zip
-/.notes/*
-!/.notes/README.md
 /screens/
+/private-notes.md
 /CLAUDE.md
