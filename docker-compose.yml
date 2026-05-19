@@ -41,10 +41,11 @@ services:
         source: ./modules/packeta
         target: /var/www/packeta-dev
 
-      # Live bind pro plugin po prvním instalu — ODKOMENTOVAT po `install-module.sh`
-      # - type: bind
-      #   source: ./modules/packeta
-      #   target: /var/www/html/plugins/vmshipment/zasilkovna
+      # Live bind pro plugin — každá změna PHP souboru v modulu je okamžitě live.
+      # Reinstall je třeba jen při změně `zasilkovna.xml`, `install.sql` nebo lang souborů.
+      - type: bind
+        source: ./modules/packeta
+        target: /var/www/html/plugins/vmshipment/zasilkovna
 
     networks:
       - vm_network

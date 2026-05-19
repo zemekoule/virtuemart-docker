@@ -6,4 +6,7 @@
 /mailpit/
 /db-snapshots/
 /modules/packeta/.git/
+/packeta.zip
+/.notes/*
+!/.notes/README.md
 /CLAUDE.md

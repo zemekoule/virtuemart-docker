@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 if [ ! -f .env ]; then
   echo "Soubor .env neexistuje, vytvářím z .env.example."
