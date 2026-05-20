@@ -552,13 +552,28 @@ Modul Packeta je vidět v `modules/packeta/`. Joomla install v `src/` je generov
 PhpStorm si detekuje PHP 8.3, Xdebug 3.5+, Composer. Tento interpreter pak používej
 pro **Settings → PHP → Composer** i pro Run/Debug konfigurace.
 
+> **macOS Apple Silicon — chyba parsování `docker-compose.yml`?** Pokud
+> dialog hlásí *"Cannot run program `/usr/local/bin/docker`"*, Docker
+> binary u tebe žije jinde (typicky `~/.docker/bin/docker`). Docker
+> Desktop ho na novějších macOS instalacích defaultně nesymlinkuje do
+> `/usr/local/bin/`. Fix:
+>
+> ```bash
+> sudo ln -s ~/.docker/bin/docker /usr/local/bin/docker
+> sudo ln -s ~/.docker/bin/docker-compose /usr/local/bin/docker-compose
+> ```
+>
+> Pak v PhpStormu zavři dialog (Cancel) a otevři znovu — Service dropdown
+> by se měl naplnit (`adminer`, `joomla`, `mailpit`, `mysql`).
+
 ### 3. Server pro web debug
 
 **Settings → PHP → Servers → `+`**:
 
 - Name: **`virtuemart.local`** — **musí** souhlasit s `PHP_IDE_CONFIG: "serverName=virtuemart.local"`
   v `docker-compose.yml`, jinak Xdebug nepoužije správný mapping.
-- Host: `localhost`, Port: `8080`, Debugger: Xdebug
+- Host: `localhost`, Port: **`8080`** (ne 80 — Apache v kontejneru poslouchá
+  na 80, ale ven přes docker-compose se mapuje na `8080:80`), Debugger: Xdebug
 - Use path mappings: **✓**
 
 Path mappings:
@@ -567,12 +582,17 @@ Path mappings:
 |---|---|
 | `<repo>/src` | `/var/www/html` |
 | `<repo>/modules/packeta` | `/var/www/html/plugins/vmshipment/zasilkovna` |
-| `<repo>/modules/packeta` | `/var/www/packeta-dev` |
 
-První mapping pokrývá celý Joomla runtime. Druhý mapping je důležitý pro breakpointy
-v modulu během webových requestů (Joomla loaduje plugin z `/plugins/vmshipment/zasilkovna/`,
-což je přes bind-mount náš `modules/packeta/`). Třetí mapping pokrývá build/lint/compose
-operace v `/var/www/packeta-dev`.
+První mapping pokrývá celý Joomla runtime (Joomla CLI, core, VM core). Druhý
+mapuje plugin file na cestu, ze které Joomla loaduje vmshipment pluginy
+během webových requestů — důležité pro breakpointy v `modules/packeta/zasilkovna.php`.
+
+> **Proč ne třetí mapping na `/var/www/packeta-dev`?** Bind mount té cesty
+> v `docker-compose.yml` existuje (pro `pack-module.sh` / composer / lint),
+> ale **nedebuguje se přes ni** — žádný PHP runtime v kontejneru tu cestu
+> aktivně neexekučuje. Navíc PhpStorm Server config **neumožňuje stejnou
+> lokální cestu mapovat dvakrát** (`modules/packeta` je už mappovaný pro
+> plugin cestu), takže by to ani technicky nešlo.
 
 ### 4. Xdebug
 
@@ -583,7 +603,10 @@ trigger.
 **PhpStorm**:
 
 - **Settings → PHP → Debug**: Debug port `9003` (default Xdebug 3).
-- Klikni na **telefonní ikonu** v toolbaru → *Start Listening for PHP Debug Connections*.
+- Aktivuj listener přes menu **Run → Start Listening for PHP Debug Connections**
+  (v PhpStormu 2024+ tahle položka v default toolbaru není; alternativně přes
+  Find Action `Cmd+Shift+A` → "Start Listening"). Po aktivaci se položka
+  přepne na *"Stop Listening for PHP Debug Connections"*.
 
 **Web debug**:
 

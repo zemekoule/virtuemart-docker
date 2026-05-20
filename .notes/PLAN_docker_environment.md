@@ -196,7 +196,25 @@ virtuemart-docker/
       `Zasilkovna/virtuemart3`) bez `recurse_copy` v `install.zasilkovna.php`.
       Ověřit reinstall workflow v devu, pak commit + PR.
 
-### Drobnosti k opravě
+- [ ] **Po vyřešení FOLLOWUPS #4 — projet znovu oba akceptační testy.**
+      Refactor `recurse_copy` mění chování instalátoru (kam soubory
+      přistanou) a dotkne se admin debug workflow. Předchozí runy
+      proběhly na předrefactor verzi:
+
+      1. **E2E acceptance test** (`.notes/ACCEPTANCE_TEST.md`) — projít
+         11 kroků znovu. Klíčové: install-module.sh + reinstall-module.sh
+         + db-restore round-trip, ať vidíme, že manifest-driven install
+         funguje stejně dobře nebo lépe. Vyřeší se i diskrepance
+         o "live je vše v `modules/packeta/`" v *Hotovo* bullet README.
+      2. **PhpStorm + Xdebug acceptance test**
+         (`.notes/ACCEPTANCE_TEST_PHPSTORM.md`) — projít znovu, zejména
+         admin debug scénář (custom field types na plugin config page).
+         Očekáváme, že rough edge "debug-on-copy, edit-on-source" zmizí —
+         breakpoint na zdroji v `modules/packeta/...` zafrkne přímo,
+         protože source = běžící file.
+
+      Po obou re-testech aktualizovat oba log soubory s novými findings
+      a status flipnout na ✅.
 
 - [x] Duplicitní načítání Xdebug — `docker-php-ext-enable xdebug` (build)
       i `xdebug.ini` (mount) oba registrují extension, takže každé volání
@@ -245,30 +263,23 @@ virtuemart-docker/
       kroků projeto, diskrepance Step 5 (mail) opraveny v PR #1, diskrepance
       kroků 2–4 v PR #2 a #3 (viz výše). Detailní log v `.notes/ACCEPTANCE_TEST.md`.
 
-- [ ] **Xdebug + PhpStorm — ověřit, že breakpoints reálně fungují.** README
-      sekce *PhpStorm setup* setup popisuje (CLI interpreter přes Docker
-      Compose, Server `virtuemart.local` s path mappingy, `start_with_request=trigger`,
-      port 9003, browser extension *Xdebug helper*). End-to-end ale nikdy
-      neověřeno. Test plán:
-      1. **CLI debug** — `./scripts/xdebug-php-www-data.sh cli/joomla.php
-         extension:list` s breakpoint nastaveným někde v Joomla CLI route
-         (např. `cli/joomla.php`). Očekáváme, že PhpStorm zastaví běh.
-      2. **Web debug** — v prohlížeči nainstalovat *Xdebug helper*, zapnout
-         *Debug* (přidá cookie `XDEBUG_TRIGGER=1`), v PhpStorm *Start
-         Listening for PHP Debug Connections*, breakpoint v `modules/packeta/zasilkovna.php`,
-         vyvolat request, který plugin loaduje (např. stránka shippingu v
-         eshopu). Očekáváme zastavení s validním path mappingem.
-      3. **Path mappingy ověřit** — proměnné v debug okně by měly ukazovat
-         na soubory v `modules/packeta/` (host strana mountu), ne na
-         `/var/www/html/plugins/vmshipment/zasilkovna/` (kontejner strana).
+- [x] **Xdebug + PhpStorm — ověřit, že breakpoints reálně fungují.**
+      **Vyřešeno** (2026-05-20, walkthrough na `main`): CLI debug ✅,
+      web debug ✅, path mappingy ✅ ukazují host cesty. Detailní log
+      v `.notes/ACCEPTANCE_TEST_PHPSTORM.md` — odhalil 3 diskrepance
+      v README (macOS Docker symlink, redundantní 3. path mapping,
+      Xdebug listener už není v toolbaru ale v Run menu) a jednu
+      workflow rough edge u admin debug (debug-on-copy, edit-on-source),
+      který spadne při vyřešení FOLLOWUPS #4 (refactor `recurse_copy`
+      v modulu).
 
 - [ ] **Verzovaná šablona pro manuální akceptační test + částečná
-      automatizace.** Doteď žije akceptační test jako one-off plánovací
-      bod tady plus pracovní záznam v `.notes/ACCEPTANCE_TEST.md`
-      (gitignored). Po každé změně ve stacku — bump `JOOMLA_TAG`,
-      `PHP_VERSION`, nová verze VM zipu v `install/`, větší změna
-      Dockerfile — bude potřeba projít test znovu, abychom věděli, že
-      kombinace funguje. Plán:
+      automatizace.** Doteď žijí akceptační testy jako one-off plánovací
+      body tady plus pracovní záznamy v `.notes/ACCEPTANCE_TEST.md`
+      a `.notes/ACCEPTANCE_TEST_PHPSTORM.md` (oboje commitnuté od PR #7).
+      Po každé změně ve stacku — bump `JOOMLA_TAG`, `PHP_VERSION`, nová
+      verze VM zipu v `install/`, větší změna Dockerfile — bude potřeba
+      projít test znovu, abychom věděli, že kombinace funguje. Plán:
 
       1. **Šablona** v repu (např. `docs/acceptance-test-template.md`
          nebo `tests/acceptance/README.md`). Strukturou kopíruje současný
@@ -277,8 +288,7 @@ virtuemart-docker/
          verzovaná, takže ji každý dev má v repu a kopíruje si ji do
          pracovního stavu pro daný run (např.
          `docs/acceptance-runs/2026-05-19_j5-php83-vm4.6.4.md`,
-         gitignored nebo commitnuté podle týmové dohody — viz otevřená
-         otázka).
+         commitnutý jako audit trail).
       2. **Auto-runner** `scripts/acceptance-test.sh` — udělá za
          uživatele, co lze automaticky:
          - reset prostředí (`reset-env.sh`)
@@ -297,11 +307,6 @@ virtuemart-docker/
          - Xdebug + PhpStorm breakpoint test (vyžaduje IDE)
          - vizuální kontrola, že VM admin UI funguje bez Safe Path
            warningů
-
-      Otevřená otázka: archivace pracovních záznamů z runů — committed
-      do `docs/acceptance-runs/` (audit trail, růst repa), nebo
-      gitignored a žijí jen v lokálním `.notes/` (čisté repo, žádný
-      audit)? Spíš první, ale rozhodneme až k tomu dojde.
 
 ### Třetí kolo (volitelné)
 
