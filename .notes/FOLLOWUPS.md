@@ -184,3 +184,42 @@ uninstallu, jak Joomla mažou stará verze při update).
 
 Není opraveno. Krátkodobý workaround hotový, dlouhodobý fix čeká na
 samostatný PR proti modulovému repu.
+
+### Před začátkem next session (rozhodovací body)
+
+Než začnu kódovat na tomhle refactoru, rozhodnout s userem:
+
+1. **Push přístup do upstream repa.** `Zasilkovna/virtuemart3` — mám
+   tam push přístup, nebo musíme forknout pod `zemekoule/virtuemart3`?
+   Zjistit: `cd modules/packeta && git remote -v` (vidíme URL) +
+   `gh repo view Zasilkovna/virtuemart3 --json viewerPermission` (vidíme
+   user role). Pokud `WRITE`/`ADMIN`, jdeme přímo. Pokud `READ`/null,
+   forkujeme.
+2. **Scope refactoru** — tři možnosti:
+   - **Minimální:** jen `recurse_copy` → `<files>` / `<media>` /
+     `<languages>` deklarace. Malý diff, nízké riziko, brzy mergovatelné.
+   - **Střední:** + FOLLOWUPS #1 (PHP 8.1 deprecation v `createCronToken`,
+     `false → array` cast). Stejný soubor, dva související bugy.
+   - **Velký:** kompletní cleanup `install.zasilkovna.php` (moderní Joomla
+     API, vyhodit deprecated calls, refactor migračních funkcí).
+     Větší scope, složitější review.
+
+   Doporučení: **střední** — `recurse_copy` refactor stejně zasahuje do
+   `postflight()` a `update()`, kde mu rovnou opravit i `createCronToken`
+   bude levné.
+
+3. **Branch + workflow.** Pracujeme v `modules/packeta/` (nested git repo,
+   ne `virtuemart-docker`). Feature větev odvodit od `master` modulu, ne
+   od main našeho dev prostředí. PR proti `Zasilkovna/virtuemart3` master.
+
+### Po dokončení refactoru — návazné kroky v `virtuemart-docker`
+
+Až bude refactor v modulu mergnut, vrátit se sem a:
+
+1. Update `modules/packeta` k nové verzi (git pull v nested repu).
+2. Provést úklid z PLAN sekce *Návazné úklidy po vyřešení modulových issues*
+   (odstranit bind mount workaround z `docker-compose.yml`, zjednodušit
+   README, smazat odkazy).
+3. Projet znovu oba akceptační testy (`.notes/ACCEPTANCE_TEST.md` +
+   `.notes/ACCEPTANCE_TEST_PHPSTORM.md`), aktualizovat logy.
+4. Odstranit odkaz na #4 v `PLAN_docker_environment.md`.
