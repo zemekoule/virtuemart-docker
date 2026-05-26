@@ -223,3 +223,79 @@ Až bude refactor v modulu mergnut, vrátit se sem a:
 3. Projet znovu oba akceptační testy (`.notes/ACCEPTANCE_TEST.md` +
    `.notes/ACCEPTANCE_TEST_PHPSTORM.md`), aktualizovat logy.
 4. Odstranit odkaz na #4 v `PLAN_docker_environment.md`.
+
+---
+
+## 5. Vygenerovat technickou dokumentaci modulu a odkázat na ni z `CLAUDE.md`
+
+Při draftování ticketů (např. PES-3149 – consign password) musí Claude
+pokaždé objevovat strukturu modulu znovu od nuly: kde leží šablony, jak se
+volá `order_extended_detail.php` (hook `plgVmOnShowOrderBEShipment`), kde
+je DB schéma (`install.sql` + `install.zasilkovna.php::upgradeSchema()`),
+jak vypadá storno (`cancelOrderSubmitToZasilkovna()`), jaké SOAP volání
+se dnes používají atd. Každé sezení = stejné `git grep` / `git show`.
+
+### Co s tím
+
+Připravit jednorázově **technickou dokumentaci modulu** uloženou v repu
+(např. `modules/packeta/docs/architecture.md` nebo přímo
+`.notes/MODULE_ARCHITECTURE.md` v tomto repu) a odkázat na ni z
+`CLAUDE.md`, aby ji Claude měl vždy v kontextu.
+
+### Co by tam mělo být (minimum)
+
+1. **Mapa souborů** — kde leží:
+   - `zasilkovna.php` (kořenový plugin, hooky `plgVmOn…`)
+   - `install.sql`, `install.zasilkovna.php` (instalace, migrace, schema)
+   - `media/admin/com_virtuemart/controllers/zasilkovna.php` (controller)
+   - `media/admin/com_virtuemart/models/zasilkovna.php`,
+     `zasilkovna_orders.php` (modely, SOAP volání)
+   - `media/admin/com_virtuemart/models/zasilkovna_src/VirtueMartModelZasilkovna/…`
+     (PSR-4 source — `Order\Detail`, `Order\Repository`, `Box\Renderer`, `Label\Format`, …)
+   - `media/admin/com_virtuemart/views/zasilkovna/tmpl/` (šablony — `default.php`,
+     `default_config.php`, `default_export.php`, `order_extended_detail.php`,
+     `order_detail_form.php`, …)
+   - `language/*` a `media/admin/*.ini` (překlady cs-CZ / en-GB / sk-SK)
+2. **DB schema** — tabulky `#__virtuemart_shipment_plg_zasilkovna`
+   a `#__virtuemart_zasilkovna_carriers`, popis sloupců, kdo je plní.
+3. **Hooky do VirtueMart** — které `plgVmOn…` metody plugin implementuje
+   a co každá z nich dělá (`plgVmOnShowOrderBEShipment`,
+   `plgVmDisplayListFE…` atd.).
+4. **Tok dat** — od checkoutu (výběr výdejního místa) přes uložení do
+   `#__virtuemart_shipment_plg_zasilkovna`, hromadné/jednotlivé podání
+   přes SOAP `createPacket()`, tisk štítku, storno.
+5. **SOAP API volání** — která se dnes používají (`createPacket`,
+   `packetsLabelsPdf`, `packetCourierNumberV2`, `packetsCourierLabelsPdf`),
+   kde jsou v kódu, jaký WSDL endpoint.
+6. **Konfigurace modulu** — boxy v `default_config.php` (Settings,
+   COD, Autosubmission, …) a jak se hodnoty čtou (`$model->getConfig(...)`).
+7. **Branch model** — `master` (stable), `v1.5.0` (next release),
+   konvence pojmenování feature větví, GitHub auto-delete branches
+   (viz [[project-github-auto-delete-branches]]).
+
+Stačí stručně, formou checklist / odkazů na konkrétní soubory a třídy.
+Cíl: aby Claude na začátku sezení o modulu věděl, kde co je, bez
+opětovného grep/show kola.
+
+### Otázky k vyřešení před začátkem
+
+1. **Kam dokumentaci umístit:**
+   - `modules/packeta/docs/architecture.md` (v nested repu modulu, půjde
+     i do upstreamu Zasilkovna/virtuemart3 — užitečné pro každého
+     vývojáře pluginu, ne jen pro Claude)
+   - `.notes/MODULE_ARCHITECTURE.md` (jen tento dev-env repo, snazší
+     iterace bez PR do upstreamu)
+   - obojí (master copy v modulu, lokální zkrácený link v `.notes/`)
+2. **Kdo dokumentaci napíše:** může ji rozjet Claude (projde modul,
+   vypíše strukturu), uživatel pak udělá CR / doplní byznysový kontext.
+3. **Jak často aktualizovat:** ideálně lehký update při každém větším PR
+   (přidání hooku, nové tabulky, nového SOAP volání). Případně občasný
+   "audit" dokumentace v samostatném ticketu.
+
+### Acceptance pro tento followup
+
+- Dokumentace existuje na jednom dohodnutém místě.
+- `CLAUDE.md` (projekt) ji odkazuje, ideálně v nové sekci "Architektura
+  modulu" / "Kde co je" – aby Claude měl odkaz hned na začátku každého
+  sezení.
+- Pokrývá body 1–7 z výčtu výše (klidně stručně).
