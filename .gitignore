@@ -9,4 +9,10 @@
 /packeta.zip
 /screens/
 /private-notes.md
+
+# Soukromá overlay vrstva (.private/ = vlastní privátní git repo) + symlinky do ní
+/.private/
 /CLAUDE.md
+/.notes
+/.claude/commands
+/.claude/settings.local.json
