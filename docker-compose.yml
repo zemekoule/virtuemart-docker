@@ -1,7 +1,6 @@
 services:
 
   joomla:
-    container_name: joomla
     build:
       context: .
       dockerfile: Dockerfile
@@ -78,7 +77,6 @@ services:
       - vm_network
 
   mysql:
-    container_name: dev_db
     image: mariadb:12
     restart: unless-stopped
     environment:
@@ -90,9 +88,13 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     ports:
-      - "3308:3306"
+      - "${DB_PORT:-3308}:3306"
     networks:
-      - vm_network
+      vm_network:
+        # Nainstalovaná Joomla má v configuration.php host `dev_db`, takže jméno
+        # musí v síti zůstat, i když se kontejner jmenuje jinak.
+        aliases:
+          - dev_db
 
   adminer:
     image: adminer
@@ -104,7 +106,6 @@ services:
 
   mailpit:
     image: axllent/mailpit
-    container_name: mailpit
     restart: unless-stopped
     volumes:
       - ./mailpit:/data

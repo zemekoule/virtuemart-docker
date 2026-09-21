@@ -39,10 +39,10 @@ xdebug: ## PHP CLI s Xdebug triggerem; ARGS="cli/joomla.php …"
 	./scripts/xdebug-php-www-data.sh $(ARGS)
 
 mysql: ## MariaDB shell (heslo asdf hardcoded i ve skriptech — viz FOLLOWUPS #3)
-	docker exec -it dev_db mariadb -u root -pasdf joomla
+	docker compose exec mysql mariadb -u root -pasdf joomla
 
 logs: ## Sleduje logy kontejneru joomla
-	docker logs -f --tail=100 joomla
+	docker compose logs -f --tail=100 joomla
 
 # --- modul -------------------------------------------------------------------
 pack: ## Zazipuje modules/packeta/ → ./packeta.zip

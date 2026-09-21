@@ -96,7 +96,11 @@ Co teď běží:
 | Joomla admin | http://localhost:8080/administrator | `admin` / `adminadmin1234` |
 | Adminer (DB UI) | http://localhost:8081 | server `dev_db`, user `root`, heslo `asdf` |
 | Mailpit (mail catcher) | http://localhost:8025 | — |
-| MariaDB (přímo z hosta) | `localhost:3308` | `root` / `asdf` |
+| MariaDB (přímo z hosta) | `localhost:3308` (port lze změnit v `.env`) | `root` / `asdf` |
+
+> **Port `3308` drží na některých strojích jiný projekt** — pak stack nenaskočí
+> (`port is already allocated`). Nastav v `.env` jiný `DB_PORT` a připojuj se na něj;
+> uvnitř sítě zůstává databáze pod jménem `dev_db` bez ohledu na to.
 
 > **DB credentials `root` / `asdf` zatím neměň.** Hodnoty jsou hardcoded
 > v `docker-compose.yml` i v několika skriptech (`db-snapshot.sh`,
