@@ -92,15 +92,15 @@ Co teď běží:
 
 | Služba | URL / port | Login |
 |---|---|---|
-| Joomla frontend | http://localhost:8080 | — |
-| Joomla admin | http://localhost:8080/administrator | `admin` / `adminadmin1234` |
-| Adminer (DB UI) | http://localhost:8081 | server `dev_db`, user `root`, heslo `asdf` |
+| Joomla frontend | http://localhost:8080 (`WEB_PORT`) | — |
+| Joomla admin | http://localhost:8080/administrator (`WEB_PORT`) | `admin` / `adminadmin1234` |
+| Adminer (DB UI) | http://localhost:8081 (`ADMINER_PORT`) | server `dev_db`, user `root`, heslo `asdf` |
 | Mailpit (mail catcher) | http://localhost:8025 | — |
-| MariaDB (přímo z hosta) | `localhost:3308` (port lze změnit v `.env`) | `root` / `asdf` |
+| MariaDB (přímo z hosta) | `localhost:3308` (`DB_PORT`) | `root` / `asdf` |
 
-> **Port `3308` drží na některých strojích jiný projekt** — pak stack nenaskočí
-> (`port is already allocated`). Nastav v `.env` jiný `DB_PORT` a připojuj se na něj;
-> uvnitř sítě zůstává databáze pod jménem `dev_db` bez ohledu na to.
+> **Porty drží na některých strojích jiný projekt** — pak stack nenaskočí
+> (`port is already allocated`). Nastav v `.env` jiný `WEB_PORT`, `ADMINER_PORT`
+> nebo `DB_PORT` a používej ty; uvnitř sítě se nic nemění (databáze zůstává `dev_db`).
 
 > **DB credentials `root` / `asdf` zatím neměň.** Hodnoty jsou hardcoded
 > v `docker-compose.yml` i v několika skriptech (`db-snapshot.sh`,
@@ -576,8 +576,8 @@ pro **Settings → PHP → Composer** i pro Run/Debug konfigurace.
 
 - Name: **`virtuemart.local`** — **musí** souhlasit s `PHP_IDE_CONFIG: "serverName=virtuemart.local"`
   v `docker-compose.yml`, jinak Xdebug nepoužije správný mapping.
-- Host: `localhost`, Port: **`8080`** (ne 80 — Apache v kontejneru poslouchá
-  na 80, ale ven přes docker-compose se mapuje na `8080:80`), Debugger: Xdebug
+- Host: `localhost`, Port: **`8080`**, případně hodnota `WEB_PORT` z `.env` (ne 80 —
+  Apache v kontejneru poslouchá na 80, ven se mapuje na `8080:80`), Debugger: Xdebug
 - Use path mappings: **✓**
 
 Path mappings:
