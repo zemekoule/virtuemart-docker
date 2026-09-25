@@ -13,7 +13,7 @@ services:
     depends_on:
       - mysql
     ports:
-      - "8080:80"
+      - "${WEB_PORT:-8080}:80"
 
     environment:
       # DB credentials (root/asdf) jsou taky hardcoded v některých skriptech
@@ -100,7 +100,7 @@ services:
     image: adminer
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "${ADMINER_PORT:-8081}:8080"
     networks:
       - vm_network
 
